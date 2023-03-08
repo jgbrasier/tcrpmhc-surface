@@ -186,7 +186,7 @@ def _init_PandasPdb(df: pd.DataFrame):
     pdb_df._df = df
     return pdb_df
 
-def save_tcrpmc_pdb(tcr_df: pd.DataFrame, pmhc_df: pd.DataFrame, dir: str, pdb_code: str) -> None:
+def save_tcrpmhc_pdb(tcr_df: pd.DataFrame, pmhc_df: pd.DataFrame, dir: str, pdb_code: str) -> None:
     """
     Save the atomic coordinates of a TCR:pMHC complex to separate PDB files for the TCR and pMHC
     chains.
