@@ -168,7 +168,14 @@ def split_af2_tcrpmhc_df(df: pd.DataFrame, chain_seq: List[str], rescale_residue
     tcr_df = pd.concat((out[2], out[3]))
     return tcr_df, pmhc_df
 
-def _init_PandasPdb(df: pd.DataFrame):
+def _convert_df_to_records_dfs(df: pd.DataFrame) -> Dict[str, pd.DataFrame]:
+    dfs = {}
+    records_grouped = df.groupby('record_name')
+    for name, group in records_grouped:
+        dfs[name] = group
+    return dfs
+
+def _init_PandasPdb(df: pd.DataFrame) -> PandasPdb:
     """
     from: https://github.com/BioPandas/biopandas/blob/main/biopandas/pdb/pandas_pdb.py
     ```
@@ -183,7 +190,7 @@ def _init_PandasPdb(df: pd.DataFrame):
     ```
     """
     pdb_df = PandasPdb()
-    pdb_df._df = df
+    pdb_df._df = _convert_df_to_records_dfs(df)
     return pdb_df
 
 def save_tcrpmhc_pdb(tcr_df: pd.DataFrame, pmhc_df: pd.DataFrame, dir: str, pdb_code: str) -> None:
@@ -218,7 +225,19 @@ def save_tcrpmhc_pdb(tcr_df: pd.DataFrame, pmhc_df: pd.DataFrame, dir: str, pdb_
 
 
 if __name__ == "__main__":
-    path = "data/pdb/run329_results_for_jg/model_0a0d6e5a-b7a7-4e72-b7da-de39ea0ecbfb.pdb"
-    df, header = read_pdb_to_dataframe(path)
-    
-    print(type(df))
+    tsv_path = 'data/preprocessed/run329_results.tsv'
+    pdb_dir = 'data/pdb/run329_results_for_jg'
+    out_dir = 'data/pdb/run329_results_split'
+
+    df = pd.read_csv(tsv_path, sep='\t')
+
+    pdb_list = ['model_'+str(id) for id in df['uuid']]
+
+    cplx_id = 0
+
+    pdb_path = os.path.join(pdb_dir, 'model_'+str(df.iloc[cplx_id]['uuid'])+'.pdb')
+    chain_seq = (df.iloc[cplx_id]['chainseq']).split('/')
+
+    raw_df, header = read_pdb_to_dataframe(pdb_path=pdb_path, parse_header=False)
+    tcr_raw_df, pmhc_raw_df = split_af2_tcrpmhc_df(raw_df, chain_seq)
+    save_tcrpmhc_pdb(tcr_raw_df, pmhc_raw_df, out_dir, df.iloc[cplx_id]['uuid'])
