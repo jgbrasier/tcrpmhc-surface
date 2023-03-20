@@ -38,8 +38,8 @@ def get_contact_atoms(df1: pd.DataFrame, df2:pd.DataFrame = None , threshold:flo
         raise NotImplementedError
     return result, node_pairs
 
-def flag_contact_atoms(df1: pd.DataFrame, df2:pd.DataFrame = None , threshold:float = 8., deprotonate: bool=True, coord_names=['x_coord', 'y_coord', 'z_coord']):
 
+def flag_contact_atoms(df1: pd.DataFrame, df2:pd.DataFrame = None , threshold:float = 8., deprotonate: bool=True, coord_names=['x_coord', 'y_coord', 'z_coord']):
     if df2 is not None:
         assert all(df1.columns == df2.columns), "DataFrame column names must match"
         if deprotonate:
@@ -55,16 +55,16 @@ def flag_contact_atoms(df1: pd.DataFrame, df2:pd.DataFrame = None , threshold:fl
 
         # Create a new dataframe containing pairs of atoms whose distance is below the threshold
         pairs = np.argwhere(dist_matrix < threshold)
-
         df1['is_contact'] = 0
         df2['is_contact'] = 0
-        df1.iloc[pairs[:, 0]]['is_contact'] = 1
-        df2.iloc[pairs[:, 1]]['is_contact'] = 1
+        df1.loc[df1.index[pairs[:, 0]], 'is_contact'] = 1
+        df2.loc[df2.index[pairs[:, 1]], 'is_contact'] = 1
         return df1, df2
     else:
         # TODO: Case where only 1 df is passed.
         raise NotImplementedError
         return df1
+    
 
 def get_all_residue_atoms(partial_df: pd.DataFrame, full_df: pd.DataFrame):
     assert all(partial_df.columns == full_df.columns), "DataFrame column names must match"

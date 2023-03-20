@@ -1,14 +1,6 @@
 import torch
-from torch_geometric.data import InMemoryDataset, Data, DataLoader
-from torch_geometric.transforms import Compose
-import numpy as np
 from scipy.spatial.transform import Rotation
-import math
-import urllib.request
-import tarfile
-from pathlib import Path
-import requests
-from tcrpmhc_surface.dmasif.data.convert import convert_pdbs
+
 
 tensor = torch.FloatTensor
 inttensor = torch.LongTensor
