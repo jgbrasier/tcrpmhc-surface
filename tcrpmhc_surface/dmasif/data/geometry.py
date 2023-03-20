@@ -547,7 +547,7 @@ def curvatures(
         # Normalization
         mean_curvature = a + d
         gauss_curvature = a * d - b * c
-        features += [mean_curvature.clamp(-1, 1), gauss_curvature.clamp(-1, 1)]
+        features += [torch.nan_to_num(mean_curvature).clamp(-1, 1), torch.nan_to_num(gauss_curvature).clamp(-1, 1)]
 
     features = torch.stack(features, dim=-1)
     return features
