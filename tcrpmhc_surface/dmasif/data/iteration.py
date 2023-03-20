@@ -1,15 +1,16 @@
 import torch
 import numpy as np
-from helper import *
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd.profiler as profiler
+from pykeops.torch import LazyTensor
+
 from sklearn.metrics import roc_auc_score
 from pathlib import Path
 import math
 from tqdm import tqdm
-from geometry_processing import save_vtk
-from helper import numpy, diagonal_ranges
+from tcrpmhc_surface.dmasif.data.geometry import save_vtk
+from tcrpmhc_surface.dmasif.utils import numpy, diagonal_ranges
 import time
 
 

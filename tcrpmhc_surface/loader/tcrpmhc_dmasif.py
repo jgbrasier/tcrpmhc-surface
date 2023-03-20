@@ -66,6 +66,12 @@ class TCRpMHCDataset(Dataset):
             np.save(os.path.join(self.processed_dir, pdb_id+"_pmhc_atomtypes.npy"), pmhc_data['types'])
             np.save(os.path.join(self.processed_dir, pdb_id+"_pmhc_iface_labels.npy"), pmhc_data['iface_labels'])
 
+    
+
+    
+
+    
+
         
 
         
