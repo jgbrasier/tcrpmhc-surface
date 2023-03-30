@@ -34,7 +34,7 @@ class TCRpMHCDataset(Dataset):
         if not os.path.exists(self.processed_dir):
             os.makedirs(self.processed_dir)
         if not os.listdir(self.processed_dir):
-            for idx in tqdm(self.df.index):
+            for idx in tqdm(range(len(self.df.index))):
                 pdb_id = str(self.df.iloc[idx]['uuid'])
                 pdb_path = os.path.join(self.pdb_dir, 'model_'+pdb_id+'.pdb')
                 chain_seq = (self.df.iloc[idx]['chainseq']).split('/')
