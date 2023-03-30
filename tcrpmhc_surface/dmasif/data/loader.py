@@ -13,24 +13,20 @@ import requests
 from tcrpmhc_surface.dmasif.data.convert import convert_pdbs
 
 
-
+   
 tensor = torch.FloatTensor
 inttensor = torch.LongTensor
 
-def load_protein_npy(pdb_id, data_dir, center=False, single_pdb=False):
+def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_features=False, normals=False):
     """Loads a protein point cloud and its features"""
 
     # Load the data, and read the connectivity information:
     # Normalize the point cloud, as specified by the user:
-    points = None if single_pdb else tensor(np.load(data_dir / (pdb_id + "_xyz.npy")))
-    center_location = None if single_pdb else torch.mean(points, axis=0, keepdims=True)
-
     atom_coords = tensor(np.load(data_dir / (pdb_id + "_atomxyz.npy")))
     atom_types = tensor(np.load(data_dir / (pdb_id + "_atomtypes.npy")))
 
-    if center:
-        points = points - center_location
-        atom_coords = atom_coords - center_location
+    # TODO: Load mesh
+    mesh_xyz = None
 
     # Interface labels
     iface_labels = (
@@ -41,21 +37,20 @@ def load_protein_npy(pdb_id, data_dir, center=False, single_pdb=False):
 
     # Features
     chemical_features = (
-        None if single_pdb else tensor(np.load(data_dir / (pdb_id + "_features.npy")))
+        None if chemical_features else tensor(np.load(data_dir / (pdb_id + "_features.npy")))
     )
 
     # Normals
     normals = (
-        None if single_pdb else tensor(np.load(data_dir / (pdb_id + "_normals.npy")))
+        None if normals else tensor(np.load(data_dir / (pdb_id + "_normals.npy")))
     )
 
     protein_data = Data(
-        xyz=points,
+        xyz=mesh_xyz,
         chemical_features=chemical_features,
         y=iface_labels,
         normals=normals,
-        center_location=center_location,
-        num_nodes=None if single_pdb else points.shape[0],
+        num_nodes=None if single_pdb else atom_coords.shape[0],
         atom_coords=atom_coords,
         atom_types=atom_types,
     )
@@ -118,20 +113,22 @@ class PairData(Data):
         else:
             return 0
 
-def load_protein_pair(pdb_id, data_dir,single_pdb=False):
+def load_protein_pair(pdb_id, pdb_id_2=None, data_dir=None, mesh=False, single_pdb=False, chemical_features=False, normals=False):
     """Loads a protein surface mesh and its features"""
-    pspl = pdb_id.split("_")
-    p1_id = pspl[0] + "_" + pspl[1]
-    p2_id = pspl[0] + "_" + pspl[2]
+    if pdb_id_2 is None:
+        pspl = pdb_id.split("_")
+        p1_id = pspl[0] + "_" + pspl[1]
+        p2_id = pspl[0] + "_" + pspl[2]
+    else:
+        p1_id = pdb_id
+        p2_id = pdb_id_2
 
-    p1 = load_protein_npy(p1_id, data_dir, center=False,single_pdb=single_pdb)
-    p2 = load_protein_npy(p2_id, data_dir, center=False,single_pdb=single_pdb)
+    p1 = load_protein_npy(p1_id, data_dir, mesh=False, single_pdb=False, chemical_features=False, normals=False)
+    p2 = load_protein_npy(p2_id, data_dir, mesh=False, single_pdb=False, chemical_features=False, normals=False)
     # pdist = ((p1['xyz'][:,None,:]-p2['xyz'][None,:,:])**2).sum(-1).sqrt()
     # pdist = pdist<2.0
     # y_p1 = (pdist.sum(1)>0).to(torch.float).reshape(-1,1)
     # y_p2 = (pdist.sum(0)>0).to(torch.float).reshape(-1,1)
-    # y_p1 = p1["y"]
-    # y_p2 = p2["y"]
 
     protein_pair_data = PairData(
         xyz_p1=p1["xyz"],

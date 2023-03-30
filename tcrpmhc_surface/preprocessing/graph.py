@@ -75,3 +75,20 @@ def get_all_residue_atoms(partial_df: pd.DataFrame, full_df: pd.DataFrame):
         add = chain_full_df[chain_full_df['residue_number'].isin(chain_partial_df['residue_number'])]
         res = pd.concat((res, add))
     return res
+
+def extract_atom_data(df: pd.DataFrame, center=False, 
+                      xyz_columns: List[str] = ['x_coord', 'y_coord', 'z_coord'], 
+                      type_column: str = 'element_symbol',
+                      label_column: str = 'is_contact') -> Dict[str, np.ndarray]:
+    # ele2num dict
+    ele2num = {"C": 0, "H": 1, "O": 2, "N": 3, "S": 4, "SE": 5}
+    # atom coordinates
+    atoms_coords = np.array(df[xyz_columns])
+    # OHE atom types
+    type_idx = np.array(df[type_column].apply(lambda x: ele2num[x]))
+    atom_types = np.eye(len(ele2num.keys()))[type_idx]
+    # interface labels
+    iface_labels = np.array(df[label_column])
+    if center:
+        atoms_coords = atoms_coords - np.mean(atoms_coords, axis=0, keepdims=True)
+    return {"xyz": atoms_coords, "types": atom_types, "iface_labels": iface_labels}
