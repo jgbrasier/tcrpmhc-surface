@@ -136,3 +136,6 @@ notebooks
 
 # data
 data/pdb
+runs
+models
+out

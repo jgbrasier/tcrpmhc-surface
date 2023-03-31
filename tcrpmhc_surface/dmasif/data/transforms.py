@@ -13,12 +13,14 @@ class RandomRotationPairAtoms(object):
         R2 = tensor(Rotation.random().as_matrix())
 
         data.atom_coords_p1 = torch.matmul(R1, data.atom_coords_p1.T).T
-        data.xyz_p1 = torch.matmul(R1, data.xyz_p1.T).T
-        data.normals_p1 = torch.matmul(R1, data.normals_p1.T).T
+        # TODO: Normals and Meshes not supported
+        # data.xyz_p1 = torch.matmul(R1, data.xyz_p1.T).T
+        # data.normals_p1 = torch.matmul(R1, data.normals_p1.T).T
 
         data.atom_coords_p2 = torch.matmul(R2, data.atom_coords_p2.T).T
-        data.xyz_p2 = torch.matmul(R2, data.xyz_p2.T).T
-        data.normals_p2 = torch.matmul(R2, data.normals_p2.T).T
+        # TODO: Normals and Meshes not supported
+        # data.xyz_p2 = torch.matmul(R2, data.xyz_p2.T).T
+        # data.normals_p2 = torch.matmul(R2, data.normals_p2.T).T
 
         data.rand_rot1 = R1
         data.rand_rot2 = R2
@@ -38,8 +40,9 @@ class CenterPairAtoms(object):
         data.atom_coords_p1 = data.atom_coords_p1 - atom_center1
         data.atom_coords_p2 = data.atom_coords_p2 - atom_center2
 
-        data.xyz_p1 = data.xyz_p1 - atom_center1
-        data.xyz_p2 = data.xyz_p2 - atom_center2
+        # TODO: No mesh currently supported
+        # data.xyz_p1 = data.xyz_p1 - atom_center1
+        # data.xyz_p2 = data.xyz_p2 - atom_center2
 
         data.atom_center1 = atom_center1
         data.atom_center2 = atom_center2

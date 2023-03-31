@@ -1,15 +1,12 @@
 import pandas as pd
 import os
 import torch
-from torch_geometric.data import InMemoryDataset, Data, Dataset
+from torch_geometric.data import Data
 from torch_geometric.transforms import Compose
 import numpy as np
 from scipy.spatial.transform import Rotation
-import math
-import urllib.request
-import tarfile
+
 from pathlib import Path
-import requests
 from tcrpmhc_surface.dmasif.data.convert import convert_pdbs
 
 
@@ -17,9 +14,26 @@ from tcrpmhc_surface.dmasif.data.convert import convert_pdbs
 tensor = torch.FloatTensor
 inttensor = torch.LongTensor
 
+def iface_valid_filter(protein_pair):
+    labels1 = protein_pair.y_p1.reshape(-1)
+    labels2 = protein_pair.y_p2.reshape(-1)
+    valid1 = (
+        (torch.sum(labels1) < 0.75 * len(labels1))
+        and (torch.sum(labels1) > 30)
+        and (torch.sum(labels1) > 0.01 * labels2.shape[0])
+    )
+    valid2 = (
+        (torch.sum(labels2) < 0.75 * len(labels2))
+        and (torch.sum(labels2) > 30)
+        and (torch.sum(labels2) > 0.01 * labels1.shape[0])
+    )
+
+    return valid1 and valid2
+
 def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_features=False, normals=False):
     """Loads a protein point cloud and its features"""
-
+    if not isinstance(data_dir, Path):
+        data_dir = Path(data_dir)
     # Load the data, and read the connectivity information:
     # Normalize the point cloud, as specified by the user:
     atom_coords = tensor(np.load(data_dir / (pdb_id + "_atomxyz.npy")))
@@ -30,19 +44,18 @@ def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_fe
 
     # Interface labels
     iface_labels = (
-        None
-        if single_pdb
+        None if single_pdb
         else tensor(np.load(data_dir / (pdb_id + "_iface_labels.npy")).reshape((-1, 1)))
     )
 
     # Features
     chemical_features = (
-        None if chemical_features else tensor(np.load(data_dir / (pdb_id + "_features.npy")))
+        tensor(np.load(data_dir / (pdb_id + "_features.npy"))) if chemical_features else None
     )
 
     # Normals
     normals = (
-        None if normals else tensor(np.load(data_dir / (pdb_id + "_normals.npy")))
+        tensor(np.load(data_dir / (pdb_id + "_normals.npy"))) if normals else None
     )
 
     protein_data = Data(
