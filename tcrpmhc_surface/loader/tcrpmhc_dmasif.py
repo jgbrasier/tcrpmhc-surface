@@ -26,12 +26,12 @@ from tcrpmhc_surface.dmasif.data.loader import (
 
 
 class TCRpMHCDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, pdb_dir: str, processed_dir: str, train=True, transform: Union[Compose, Callable]=None): 
+    def __init__(self, df: pd.DataFrame, pdb_dir: str, processed_dir: str, transform: Union[Compose, Callable]=None): 
 
         # load data
         self.df = df
         self.pdb_dir = pdb_dir
-        self.processed_dir = processed_dir+"_train" if train else processed_dir+"_test"
+        self.processed_dir = processed_dir
 
         # transformations (ex: random rotation etc..)
         self.transform = transform
@@ -39,7 +39,7 @@ class TCRpMHCDataset(Dataset):
     def process(self, contact_threshold: float = 8.0, parse_header: bool = False) -> None:
         if not os.path.exists(self.processed_dir):
             os.makedirs(self.processed_dir)
-        if len(os.listdir(self.processed_dir)) == len(self.df.index)*6: # x6 because each file 
+        if len(os.listdir(self.processed_dir)) > 0 :
             print(f"PDBs already processed in {self.processed_dir}")
         else:
             print(f"Processing PDBs, saving to {self.processed_dir}")

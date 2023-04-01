@@ -137,5 +137,5 @@ notebooks
 # data
 data/pdb
 runs
-models
+models/
 out

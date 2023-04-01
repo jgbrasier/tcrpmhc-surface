@@ -58,7 +58,7 @@ transformations = (
 # Read in and split data
 df = pd.read_csv(TSV_PATH, sep='\t')
 # select only positive samples
-df = df[df['binder']==1].copy()
+df = df[df['binder']==1].sample(2000, random_state=args.seed).copy()
 train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, low=30, high=500)
 
 
