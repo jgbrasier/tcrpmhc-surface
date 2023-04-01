@@ -11,7 +11,7 @@ from torch_geometric.transforms import Compose
 
 from tcrpmhc_surface.loader import TCRpMHCDataset
 from tcrpmhc_surface.dmasif.data.transforms import RandomRotationPairAtoms, NormalizeChemFeatures, CenterPairAtoms
-from tcrpmhc_surface.dmasif.models import dMaSIF
+from tcrpmhc_surface.dmasif.model import dMaSIF
 from tcrpmhc_surface.dmasif.data.iteration import iterate, iterate_surface_precompute
 from tcrpmhc_surface.dmasif.data.loader import iface_valid_filter
 from tcrpmhc_surface.utils import hard_split_df
@@ -57,8 +57,8 @@ transformations = (
 
 # Read in and split data
 df = pd.read_csv(TSV_PATH, sep='\t')
-# select only positive samples
-df = df[df['binder']==1].sample(2000, random_state=args.seed).copy()
+# select only positive samples .sample(2000, random_state=args.seed)
+df = df[df['binder']==1].copy()
 train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, low=30, high=500)
 
 
@@ -66,7 +66,7 @@ train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.8
 batch_vars = ["xyz_p1", "xyz_p2", "atom_coords_p1", "atom_coords_p2"]
 # Load the train dataset:
 train_dataset = TCRpMHCDataset(
-    df=train_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, train=True, transform=transformations
+    df=train_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
 )
 train_dataset.process()
 
@@ -88,7 +88,7 @@ train_dataset, val_dataset = random_split(
 
 # Load the test dataset:
 test_dataset = TCRpMHCDataset(
-    df=test_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, train=False,  transform=transformations
+    df=test_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
 )
 test_dataset.process()
 

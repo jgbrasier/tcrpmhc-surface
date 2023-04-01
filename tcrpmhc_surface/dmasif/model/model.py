@@ -13,7 +13,7 @@ from tcrpmhc_surface.dmasif.data.geometry import (
     atoms_to_points_normals,
 )
 from tcrpmhc_surface.dmasif.utils import soft_dimension, diagonal_ranges
-from tcrpmhc_surface.dmasif.models.benchmark_models import DGCNN_seg, PointNet2_seg, dMaSIFConv_seg
+from tcrpmhc_surface.dmasif.model.benchmark_models import DGCNN_seg, PointNet2_seg, dMaSIFConv_seg
 
 
 def knn_atoms(x, y, x_batch, y_batch, k):

@@ -22,7 +22,7 @@ from torch_geometric.nn import (
 )
 from pykeops.torch import LazyTensor
 
-from tcrpmhc_surface.dmasif.models.benchmark_layers import MyDynamicEdgeConv, MyXConv
+from tcrpmhc_surface.dmasif.model.benchmark_layers import MyDynamicEdgeConv, MyXConv
 from tcrpmhc_surface.dmasif.data.geometry import dMaSIFConv, mesh_normals_areas, tangent_vectors
 from tcrpmhc_surface.dmasif.utils import diagonal_ranges
 
