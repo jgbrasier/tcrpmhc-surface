@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 def hard_split_df(
-        df: pd.DataFrame, target_col: str, min_ratio: float, random_seed: float, low: int, high: int, target_values: List[str]=None) -> Tuple[pd.DataFrame, pd.DataFrame, List[str]]:
+        df: pd.DataFrame, target_col: str, min_ratio: float, random_seed: float = None, low: int = None, high: int = None, target_values: List[str]=None) -> Tuple[pd.DataFrame, pd.DataFrame, List[str]]:
     """ Assume a target column, e.g. `epitope`.
     Then:
         1) Select random sample

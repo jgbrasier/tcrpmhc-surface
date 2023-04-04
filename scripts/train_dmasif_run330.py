@@ -2,8 +2,8 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-
 import uuid
+
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -25,15 +25,17 @@ import pykeops
 pykeops.clean_pykeops()
 
 
-PDB_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/pdb/run329_results_for_jg"
-PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/run_329"
-TSV_PATH = "data/preprocessed/run329_results.tsv"
-RUN_ID = str(uuid.uuid4())[:8]
+PDB_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/pdb/run330_results_for_jg"
+PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/run_330"
+TSV_PATH = "data/preprocessed/run330_results.tsv"
+
 
 # Parse the arguments, prepare the TensorBoard writer:
 args = parser.parse_args()
+RUN_ID = args.restart_training.split("_")[-3] if args.restart_training else str(uuid.uuid4())[:8]
+print("RUN ID:", RUN_ID)
 writer = SummaryWriter("runs/{}_{}".format(args.experiment_name, RUN_ID))
-model_path = "models/" + args.experiment_name + "_" + RUN_ID
+model_path = "models/" + args.experiment_name + "_{}".format(RUN_ID)
 
 if not Path("models/").exists():
     Path("models/").mkdir(exist_ok=False)
@@ -59,14 +61,16 @@ transformations = (
 
 # Read in and generate data
 df = pd.read_csv(TSV_PATH, sep='\t')
-df = df[df['binder']==1].copy()
 dataset = TCRpMHCDataset(
     df=df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
 )
 dataset.process()
-# select only positive samples .sample(2000, random_state=args.seed)
-df = df.sample(2000, random_state=args.seed)
-train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, low=30, high=500)
+# select positive samples and sample 1000 negatives
+# df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
+df = df[df['binder']==1].copy()
+
+target_sequences = ['CINGVCWTV', 'DATYQRTRALVR', 'ELAGIGILTV', 'FLCMKALLL', 'FTSDYYQLY', 'GLCTLVAML', 'IMNDMPIYM', 'IVTDFSVIK']
+train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, target_values=target_sequences)
 
 
 # PyTorch geometric expects an explicit list of "batched variables":
@@ -97,13 +101,6 @@ test_dataset = TCRpMHCDataset(
     df=test_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
 )
 
-# test_dataset = [data for data in test_dataset if iface_valid_filter(data)]
-test_loader = DataLoader(
-    test_dataset, batch_size=1, follow_batch=batch_vars, shuffle=True
-)
-# print("Preprocessing testing dataset")
-# test_dataset = iterate_surface_precompute(test_loader, net, args)
-
 
 # PyTorch_geometric data loaders:
 train_loader = DataLoader(
@@ -116,8 +113,8 @@ test_loader = DataLoader(test_dataset, batch_size=1, follow_batch=batch_vars)
 # Baseline optimizer:
 optimizer = torch.optim.Adam(net.parameters(), lr=3e-4, amsgrad=True)
 best_loss = 1e10  # We save the "best model so far"
-
 starting_epoch = 0
+
 if args.restart_training != "":
     checkpoint = torch.load("models/" + args.restart_training)
     net.load_state_dict(checkpoint["model_state_dict"])
@@ -181,7 +178,7 @@ for i in range(starting_epoch, args.n_epochs):
                     "optimizer_state_dict": optimizer.state_dict(),
                     "best_loss": best_loss,
                 },
-                model_path + "_epoch_{}".format(i),
+                model_path + "_epoch{}".format(i),
             )
 
             best_loss = val_loss

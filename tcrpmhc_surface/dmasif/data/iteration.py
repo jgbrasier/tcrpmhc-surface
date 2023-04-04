@@ -371,12 +371,13 @@ def iterate(
                     summary_writer.add_histogram(f"Input features/{d}", features)
 
             if save_path is not None:
+                protein_pair_id = batch_ids[protein_it] + "_tcr_pmhc"
                 save_protein_batch_single(
-                    batch_ids[protein_it], P1, save_path, pdb_idx=1
+                    protein_pair_id, P1, save_path, pdb_idx=1
                 )
                 if not args.single_protein:
                     save_protein_batch_single(
-                        batch_ids[protein_it], P2, save_path, pdb_idx=2
+                        protein_pair_id, P2, save_path, pdb_idx=2
                     )
 
             try:

@@ -139,3 +139,5 @@ data/pdb
 runs
 models/
 out
+preds
+timings

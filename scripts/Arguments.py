@@ -169,3 +169,10 @@ parser.add_argument(
     default="",
     help="Which structures to do inference on",
 )
+
+parser.add_argument(
+    "--run_id",
+    type=str,
+    default="",
+    help="SBATCH run ID",
+)

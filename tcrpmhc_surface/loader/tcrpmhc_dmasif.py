@@ -26,7 +26,7 @@ from tcrpmhc_surface.dmasif.data.loader import (
 
 
 class TCRpMHCDataset(Dataset):
-    def __init__(self, df: pd.DataFrame, pdb_dir: str, processed_dir: str, transform: Union[Compose, Callable]=None): 
+    def __init__(self, df: pd.DataFrame, pdb_dir: str = None, processed_dir: str = None, transform: Union[Compose, Callable]=None): 
 
         # load data
         self.df = df
@@ -66,6 +66,7 @@ class TCRpMHCDataset(Dataset):
         return len(self.df)
     
     def __getitem__(self, index) -> PairData:
+        # P1 is always TCR, P2 is always pMHC
         p1_id = str(self.df.iloc[index]['uuid'])+"_tcr"
         p2_id = str(self.df.iloc[index]['uuid'])+"_pmhc"
         p1 = load_protein_npy(p1_id, self.processed_dir, mesh=False, single_pdb=False, chemical_features=False, normals=False)
