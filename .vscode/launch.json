@@ -5,12 +5,20 @@
     "version": "0.1.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: Current File with Args",
             "type": "python",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "justMyCode": false
+            "justMyCode": false,
+            "args": [
+                "--experiment_name", "dMaSIF_search_3layer_12A",
+                "--embedding_layer", "dMaSIF",
+                "--search", "True",
+                "--device", "cuda:0",
+                "--radius", "12.0",
+                "--n_layers", "3"
+            ]
         },
         {
             "name": "Debug Tests",

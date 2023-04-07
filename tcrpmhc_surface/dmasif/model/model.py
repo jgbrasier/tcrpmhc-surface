@@ -448,9 +448,6 @@ class dMaSIF(nn.Module):
             P["atoms"],
             P["batch_atoms"],
             atomtypes=P["atomtypes"],
-            resolution=self.args.resolution,
-            sup_sampling=self.args.sup_sampling,
-            distance=self.args.distance,
         )
         if P['mesh_labels'] is not None:
             project_iface_labels(P)

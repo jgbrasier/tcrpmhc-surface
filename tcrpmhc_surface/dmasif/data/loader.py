@@ -40,9 +40,9 @@ def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_fe
     atom_types = tensor(np.load(data_dir / (pdb_id + "_atomtypes.npy")))
 
     # TODO: Load mesh
-    mesh_xyz = None
+    mesh_xyz = tensor(np.load(data_dir / (pdb_id + "_xyz.npy"))) if mesh else None
 
-    # Interface labels
+    # Atom labels
     iface_labels = (
         None if single_pdb
         else tensor(np.load(data_dir / (pdb_id + "_iface_labels.npy")).reshape((-1, 1)))
@@ -63,7 +63,7 @@ def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_fe
         chemical_features=chemical_features,
         y=iface_labels,
         normals=normals,
-        num_nodes=None if single_pdb else atom_coords.shape[0],
+        num_nodes= None if single_pdb else atom_coords.shape[0],
         atom_coords=atom_coords,
         atom_types=atom_types,
     )
@@ -73,12 +73,16 @@ def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_fe
 class PairData(Data):
     def __init__(
         self,
+        name_p1=None,
+        name_p2=None,
         xyz_p1=None,
         xyz_p2=None,
         chemical_features_p1=None,
         chemical_features_p2=None,
         y_p1=None,
         y_p2=None,
+        labels_p1=None,
+        labels_p2=None,
         normals_p1=None,
         normals_p2=None,
         center_location_p1=None,
@@ -93,12 +97,16 @@ class PairData(Data):
         rand_rot2=None,
     ):
         super().__init__()
+        self.name_p1=name_p1,
+        self.name_p2=name_p2,
         self.xyz_p1 = xyz_p1
         self.xyz_p2 = xyz_p2
         self.chemical_features_p1 = chemical_features_p1
         self.chemical_features_p2 = chemical_features_p2
         self.y_p1 = y_p1
         self.y_p2 = y_p2
+        self.labels_p1 = labels_p1,
+        self.labels_p2 = labels_p2,
         self.normals_p1 = normals_p1
         self.normals_p2 = normals_p2
         self.center_location_p1 = center_location_p1
@@ -144,6 +152,8 @@ def load_protein_pair(pdb_id, pdb_id_2=None, data_dir=None, mesh=False, single_p
     # y_p2 = (pdist.sum(0)>0).to(torch.float).reshape(-1,1)
 
     protein_pair_data = PairData(
+        name_p1=p1_id,
+        name_p2=p2_id,
         xyz_p1=p1["xyz"],
         xyz_p2=p2["xyz"],
         chemical_features_p1=p1["chemical_features"],

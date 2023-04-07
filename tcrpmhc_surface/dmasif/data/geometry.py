@@ -201,12 +201,12 @@ def soft_distances(x, y, batch_x, batch_y, smoothness=0.01, atomtypes=None):
 def atoms_to_points_normals(
     atoms,
     batch,
-    distance=1.05,
+    distance=1.5,
     smoothness=0.5,
-    resolution=1.0,
+    resolution=1.2,
     nits=4,
     atomtypes=None,
-    sup_sampling=20,
+    sup_sampling=35,
     variance=0.1,
 ):
     """Turns a collection of atoms into an oriented point cloud.

@@ -19,9 +19,11 @@ def process_single(protein_pair, chain_idx=1):
 
     P = {}
     with_mesh = "face_p1" in protein_pair.keys
-    preprocessed = "gen_xyz_p1" in protein_pair.keys
+    preprocessed = "xyz_p1" in protein_pair.keys
 
     if chain_idx == 1:
+        # protein name
+        P['name'] = protein_pair.name_p1
         # Ground truth labels are available on mesh vertices:
         P["mesh_labels"] = protein_pair.y_p1 if with_mesh else None
 
@@ -41,12 +43,13 @@ def process_single(protein_pair, chain_idx=1):
         P["atom_xyz"] = protein_pair.atom_coords_p1
         P["atomtypes"] = protein_pair.atom_types_p1
 
-        P["xyz"] = protein_pair.gen_xyz_p1 if preprocessed else None
-        P["normals"] = protein_pair.gen_normals_p1 if preprocessed else None
-        P["batch"] = protein_pair.gen_batch_p1 if preprocessed else None
-        P["labels"] = protein_pair.gen_labels_p1 if preprocessed else None
+        P["xyz"] = protein_pair.xyz_p1 if preprocessed else None
+        P["normals"] = protein_pair.normals_p1 if preprocessed else None
+        P["batch"] = protein_pair.batch_p1 if preprocessed else None
+        P["labels"] = protein_pair.labels_p1 if preprocessed else None
 
     elif chain_idx == 2:
+        P['name'] = protein_pair.name_p2
         # Ground truth labels are available on mesh vertices:
         P["mesh_labels"] = protein_pair.y_p2 if with_mesh else None
 
@@ -66,10 +69,10 @@ def process_single(protein_pair, chain_idx=1):
         P["atom_xyz"] = protein_pair.atom_coords_p2
         P["atomtypes"] = protein_pair.atom_types_p2
 
-        P["xyz"] = protein_pair.gen_xyz_p2 if preprocessed else None
-        P["normals"] = protein_pair.gen_normals_p2 if preprocessed else None
-        P["batch"] = protein_pair.gen_batch_p2 if preprocessed else None
-        P["labels"] = protein_pair.gen_labels_p2 if preprocessed else None
+        P["xyz"] = protein_pair.xyz_p2 if preprocessed else None
+        P["normals"] = protein_pair.normals_p2 if preprocessed else None
+        P["batch"] = protein_pair.batch_p2 if preprocessed else None
+        P["labels"] = protein_pair.labels_p2 if preprocessed else None
 
     return P
 
@@ -123,14 +126,14 @@ def project_iface_labels(P, threshold=2.0):
 
 def process(args, protein_pair, net):
     P1 = process_single(protein_pair, chain_idx=1)
-    if not "gen_xyz_p1" in protein_pair.keys:
+    if not "xyz_p1" in protein_pair.keys:
         net.preprocess_surface(P1)
         #if P1["mesh_labels"] is not None:
         #    project_iface_labels(P1)
     P2 = None
     if not args.single_protein:
         P2 = process_single(protein_pair, chain_idx=2)
-        if not "gen_xyz_p2" in protein_pair.keys:
+        if not "xyz_p2" in protein_pair.keys:
             net.preprocess_surface(P2)
             #if P2["mesh_labels"] is not None:
             #    project_iface_labels(P2)
@@ -139,6 +142,22 @@ def process(args, protein_pair, net):
 
 
 def generate_matchinglabels(args, P1, P2):
+    if args.random_rotation:
+        P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
+        P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
+    dist_matrix = torch.sqrt(((P1["xyz"][:, None] - P2["xyz"]) ** 2).sum(axis=2))
+    # pairs of atoms whose distance is below the threshold
+    pairs = torch.argwhere(dist_matrix < 3.) #threshold set to 3 angstroms
+    p1_iface_labels = torch.zeros(len(P1["xyz"]))
+    p2_iface_labels = torch.zeros(len(P2["xyz"]))
+    p1_iface_labels[pairs[:, 0]] = 1
+    p2_iface_labels[pairs[:, 1]] = 1
+    P1["labels"] = p1_iface_labels
+    P2["labels"] = p2_iface_labels
+    return P1, P2
+
+# OLDER VERSION DID NOT WORK TOO WELL
+def generate_matchinglabels_old(args, P1, P2):
     if args.random_rotation:
         P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
         P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
@@ -223,6 +242,7 @@ def extract_single(P_batch, number):
 
     with_mesh = P_batch["labels"] is not None
     # Ground truth labels are available on mesh vertices:
+
     P["labels"] = P_batch["labels"][batch] if with_mesh else None
 
     P["batch"] = P_batch["batch"][batch]
@@ -238,6 +258,9 @@ def extract_single(P_batch, number):
     # Chemical features: atom coordinates and types.
     P["atom_xyz"] = P_batch["atom_xyz"][batch_atoms]
     P["atomtypes"] = P_batch["atomtypes"][batch_atoms]
+
+    # protein name
+    P["name"] = P_batch["name"][number]
 
     return P
 
@@ -295,7 +318,6 @@ def iterate(
             P1 = extract_single(P1_batch, protein_it)
             P2 = None if args.single_protein else extract_single(P2_batch, protein_it)
 
-
             if args.random_rotation:
                 P1["rand_rot"] = protein_pair.rand_rot1.view(-1, 3, 3)[0]
                 P1["atom_center"] = protein_pair.atom_center1.view(-1, 1, 3)[0]
@@ -333,7 +355,13 @@ def iterate(
             P2 = outputs["P2"]
 
             if args.search:
-                generate_matchinglabels(args, P1, P2)
+                P1, P2 = generate_matchinglabels(args, P1, P2)
+
+            np.save('p1_xyz', P1['xyz'].cpu().detach().numpy())
+            np.save('p2_xyz', P2['xyz'].cpu().detach().numpy())
+            np.save('p1_labels', P1['labels'].cpu().detach().numpy())
+            np.save('p2_labels', P2['labels'].cpu().detach().numpy())
+            break
 
             if P1["labels"] is not None:
                 loss, sampled_preds, sampled_labels = compute_loss(args, P1, P2)

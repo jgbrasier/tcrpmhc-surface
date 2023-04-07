@@ -91,4 +91,4 @@ def extract_atom_data(df: pd.DataFrame, center=False,
     iface_labels = np.array(df[label_column])
     if center:
         atoms_coords = atoms_coords - np.mean(atoms_coords, axis=0, keepdims=True)
-    return {"xyz": atoms_coords, "types": atom_types, "iface_labels": iface_labels}
+    return {"atom_xyz": atoms_coords, "atom_types": atom_types, "atom_labels": iface_labels}
