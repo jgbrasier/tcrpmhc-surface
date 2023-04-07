@@ -85,7 +85,7 @@ class TCRpMHCDataset(Dataset):
                 normals_p1=p1["normals"],
                 normals_p2=p2["normals"],
                 xyz_p1=p1["xyz"],
-                xyz_p2=p1["xyz"],
+                xyz_p2=p2["xyz"],
             )
         else:
             p1 = load_protein_npy(p1_id, self.processed_dir, mesh=False, single_pdb=False, chemical_features=False, normals=False)

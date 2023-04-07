@@ -26,8 +26,8 @@ pykeops.clean_pykeops()
 
 
 PDB_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/pdb/run330_results_for_jg"
-PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/run_330"
-TSV_PATH = "data/preprocessed/run330_results.tsv"
+PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/run_330_mesh"
+TSV_PATH = "data/preprocessed/run330_sampled.tsv"
 
 
 # Parse the arguments, prepare the TensorBoard writer:
@@ -61,10 +61,10 @@ transformations = (
 
 # Read in and generate data
 df = pd.read_csv(TSV_PATH, sep='\t')
-dataset = TCRpMHCDataset(
-    df=df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
-)
-dataset.process()
+# dataset = TCRpMHCDataset(
+#     df=df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
+# )
+
 # select positive samples and sample 1000 negatives
 # df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
 df = df[df['binder']==1].copy()
@@ -178,7 +178,7 @@ for i in range(starting_epoch, args.n_epochs):
                     "optimizer_state_dict": optimizer.state_dict(),
                     "best_loss": best_loss,
                 },
-                model_path + "_epoch{}".format(i),
+                model_path + "_epoch_{}".format(i),
             )
 
             best_loss = val_loss

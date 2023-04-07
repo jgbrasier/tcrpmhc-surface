@@ -225,6 +225,8 @@ def combine_pair(P1, P2):
         elif key == "triangles":
             # v1v2 = torch.cat([v1,v2],dim=1)
             continue
+        elif key == "name":
+            v1v2 = v1+v2
         else:
             v1v2 = torch.cat([v1, v2], dim=0)
         P1P2[key] = v1v2
@@ -256,6 +258,9 @@ def split_pair(P1P2):
             continue
             # P1[key] = v1v2[:,p1_atom_indices]
             # P2[key] = v1v2[:,p2_atom_indices]
+        elif key == "name":
+            P1[key] = v1v2[0]
+            P2[key] = v1v2[1]
         else:
             P1[key] = v1v2[p1_indices]
             P2[key] = v1v2[p2_indices]

@@ -45,8 +45,12 @@ def process_single(protein_pair, chain_idx=1):
 
         P["xyz"] = protein_pair.xyz_p1 if preprocessed else None
         P["normals"] = protein_pair.normals_p1 if preprocessed else None
-        P["batch"] = protein_pair.batch_p1 if preprocessed else None
-        P["labels"] = protein_pair.labels_p1 if preprocessed else None
+        P["batch"] = protein_pair.xyz_p1_batch if preprocessed else None
+        if preprocessed:
+            labels = protein_pair.labels_p1[0] if len(protein_pair.labels_p1)==1 else protein_pair.labels_p1
+        else:
+            labels = None
+        P["labels"] = labels
 
     elif chain_idx == 2:
         P['name'] = protein_pair.name_p2
@@ -71,8 +75,12 @@ def process_single(protein_pair, chain_idx=1):
 
         P["xyz"] = protein_pair.xyz_p2 if preprocessed else None
         P["normals"] = protein_pair.normals_p2 if preprocessed else None
-        P["batch"] = protein_pair.batch_p2 if preprocessed else None
-        P["labels"] = protein_pair.labels_p2 if preprocessed else None
+        P["batch"] = protein_pair.xyz_p2_batch if preprocessed else None
+        if preprocessed:
+            labels = protein_pair.labels_p2[0] if len(protein_pair.labels_p2)==1 else protein_pair.labels_p2
+        else:
+            labels = None
+        P["labels"] = labels
 
     return P
 
@@ -175,6 +183,11 @@ def generate_matchinglabels_old(args, P1, P2):
 
 
 def compute_loss(args, P1, P2, n_points_sample=16):
+    P1["labels"] = torch.squeeze(P1["labels"]) if P1["labels"].dim() == 2 else P1["labels"]
+    P2["labels"] = torch.squeeze(P2["labels"]) if P2["labels"].dim() == 2 else P2["labels"]
+    if args.random_rotation:
+        P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
+        P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
 
     if args.search:
         pos_xyz1 = P1["xyz"][P1["labels"] == 1]
@@ -187,7 +200,12 @@ def compute_loss(args, P1, P2, n_points_sample=16):
         )
         pos_desc_dists = torch.matmul(pos_descs1, pos_descs2.T)
 
-        pos_preds = pos_desc_dists[pos_xyz_dists < 1.0]
+        # np.save(f"{P2['name']}_xyz", P2['xyz'].cpu().detach().numpy())
+        # np.save(f"{P2['name']}_labels", P2['labels'].cpu().detach().numpy())
+        # np.save(f"{P1['name']}_xyz", P1['xyz'].cpu().detach().numpy())
+        # np.save(f"{P1['name']}_labels", P1['labels'].cpu().detach().numpy())
+
+        pos_preds = pos_desc_dists[pos_xyz_dists < 3.0] # distance threshold set to 3 on labels TODO: pass as param
         pos_labels = torch.ones_like(pos_preds)
 
         n_desc_sample = 100
@@ -354,14 +372,8 @@ def iterate(
             P1 = outputs["P1"]
             P2 = outputs["P2"]
 
-            if args.search:
+            if args.search and P1["labels"] is None:
                 P1, P2 = generate_matchinglabels(args, P1, P2)
-
-            np.save('p1_xyz', P1['xyz'].cpu().detach().numpy())
-            np.save('p2_xyz', P2['xyz'].cpu().detach().numpy())
-            np.save('p1_labels', P1['labels'].cpu().detach().numpy())
-            np.save('p2_labels', P2['labels'].cpu().detach().numpy())
-            break
 
             if P1["labels"] is not None:
                 loss, sampled_preds, sampled_labels = compute_loss(args, P1, P2)
@@ -470,13 +482,13 @@ def iterate_surface_precompute(dataset, net, args):
                 )
                 P2["normals"] = torch.matmul(P2["rand_rot"].T, P2["normals"].T).T
         protein_pair = protein_pair.to_data_list()[0]
-        protein_pair.gen_xyz_p1 = P1["xyz"]
-        protein_pair.gen_normals_p1 = P1["normals"]
-        protein_pair.gen_batch_p1 = P1["batch"]
-        protein_pair.gen_labels_p1 = P1["labels"]
-        protein_pair.gen_xyz_p2 = P2["xyz"]
-        protein_pair.gen_normals_p2 = P2["normals"]
-        protein_pair.gen_batch_p2 = P2["batch"]
-        protein_pair.gen_labels_p2 = P2["labels"]
+        protein_pair.xyz_p1 = P1["xyz"]
+        protein_pair.normals_p1 = P1["normals"]
+        protein_pair.batch_p1 = P1["batch"]
+        protein_pair.labels_p1 = P1["labels"]
+        protein_pair.xyz_p2 = P2["xyz"]
+        protein_pair.normals_p2 = P2["normals"]
+        protein_pair.batch_p2 = P2["batch"]
+        protein_pair.labels_p2 = P2["labels"]
         processed_dataset.append(protein_pair.to("cpu"))
     return processed_dataset

@@ -12,4 +12,4 @@
 
 . startup.sh
 
-python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_search_3layer_12A_nonegs --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --n_epoch 20
+python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_search_3layer_12A_run330_nonegs_randomrot --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --n_epoch 20
