@@ -1,11 +1,15 @@
 # train dMaSIF
-python -W ignore -u scripts/train_dmasif_run329.py --experiment_name dMaSIF_search_3layer_12A --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --n_epoch 20
+python -W ignore -u scripts/train_dmasif_run329.py --experiment_name dMaSIF_3layer_12A --batch_size 64 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --n_epoch 30
 
 # Resume training
---restart_training dMaSIF_search_3layer_12A_b2280229_epoch_XXX
+--restart_training dMaSIF_3layer_12A_RUNUUID_epoch_XXX
 
 # train no negs
-python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_search_3layer_12A_nonegs --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --n_epoch 20
+python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_nonegs --batch_size 64 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --n_epoch 30
 
 # generate structures
-python -W ignore -u scripts/process_dmasif_run330.py --experiment_name dMaSIF_search_3layer_12A_nonegs --embedding_layer dMaSIF --search True --device cuda:0 --radius 12.0 --n_layers 3
+python -W ignore -u scripts/process_dmasif_run330.py --experiment_name dMaSIF_3layer_12A --embedding_layer dMaSIF --device cuda:0 --radius 12.0 --n_layers 3
+python -W ignore -u scripts/process_dmasif_tcr3d.py --experiment_name dMaSIF_3layer_12A --embedding_layer dMaSIF --device cuda:0 --radius 12.0 --n_layers 3
+
+# test
+python -W ignore -u scripts/test_dmasif_tcr3d.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_randomrot_6f315c96_epoch_19 --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3

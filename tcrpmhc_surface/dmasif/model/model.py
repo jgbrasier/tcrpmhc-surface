@@ -325,40 +325,54 @@ class dMaSIF(nn.Module):
             )
 
             # Asymmetric embedding
-            if args.search:
-                self.orientation_scores2 = nn.Sequential(
-                    nn.Linear(I, O),
-                    nn.LeakyReLU(negative_slope=0.2),
-                    nn.Linear(O, 1),
-                )
+            # if args.search:
+            self.orientation_scores2 = nn.Sequential(
+                nn.Linear(I, O),
+                nn.LeakyReLU(negative_slope=0.2),
+                nn.Linear(O, 1),
+            )
 
-                self.conv2 = dMaSIFConv_seg(
-                    args,
-                    in_channels=I,
-                    out_channels=E,
-                    n_layers=args.n_layers,
-                    radius=args.radius,
-                )
+            self.conv2 = dMaSIFConv_seg(
+                args,
+                in_channels=I,
+                out_channels=E,
+                n_layers=args.n_layers,
+                radius=args.radius,
+            )
 
         elif args.embedding_layer == "DGCNN":
             self.conv = DGCNN_seg(I + 3, E,self.args.n_layers,self.args.k)
-            if args.search:
-                self.conv2 = DGCNN_seg(I + 3, E,self.args.n_layers,self.args.k)
+            # if args.search:
+            self.conv2 = DGCNN_seg(I + 3, E,self.args.n_layers,self.args.k)
 
         elif args.embedding_layer == "PointNet++":
             self.conv = PointNet2_seg(args, I, E)
-            if args.search:
-                self.conv2 = PointNet2_seg(args, I, E)
+            # if args.search:
+            self.conv2 = PointNet2_seg(args, I, E)
 
-        if args.site:
+        # if args.site:
             # Post-processing, without batch norm:
-            self.net_out = nn.Sequential(
-                nn.Linear(E, H),
-                nn.LeakyReLU(negative_slope=0.2),
-                nn.Linear(H, H),
-                nn.LeakyReLU(negative_slope=0.2),
-                nn.Linear(H, 1),
-            )
+        # self.net_out = nn.Sequential(
+        #     nn.Linear(E, H),
+        #     nn.LeakyReLU(negative_slope=0.2),
+        #     nn.Linear(H, H),
+        #     nn.LeakyReLU(negative_slope=0.2),
+        #     nn.Linear(H, 1),
+        # )
+        self.net_out1 = nn.Sequential(
+            nn.Linear(E, H),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Linear(H, H),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Linear(H, 1),
+        )
+        self.net_out2 = nn.Sequential(
+            nn.Linear(E, H),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Linear(H, H),
+            nn.LeakyReLU(negative_slope=0.2),
+            nn.Linear(H, 1),
+        )
 
     def features(self, P, i=1):
         """Estimates geometric and chemical features from a protein surface or a cloud of atoms."""
@@ -416,30 +430,30 @@ class dMaSIF(nn.Module):
                 batch=P["batch"],
             )
             P["embedding_1"] = self.conv(features)
-            if self.args.search:
-                self.conv2.load_mesh(
-                    P["xyz"],
-                    triangles=P["triangles"] if self.args.use_mesh else None,
-                    normals=None if self.args.use_mesh else P["normals"],
-                    weights=self.orientation_scores2(features),
-                    batch=P["batch"],
-                )
-                P["embedding_2"] = self.conv2(features)
+            # if self.args.search:
+            self.conv2.load_mesh(
+                P["xyz"],
+                triangles=P["triangles"] if self.args.use_mesh else None,
+                normals=None if self.args.use_mesh else P["normals"],
+                weights=self.orientation_scores2(features),
+                batch=P["batch"],
+            )
+            P["embedding_2"] = self.conv2(features)
 
         # First baseline:
         elif self.args.embedding_layer == "DGCNN":
             features = torch.cat([features, P["xyz"]], dim=-1).contiguous()
             P["embedding_1"] = self.conv(P["xyz"], features, P["batch"])
-            if self.args.search:
-                P["embedding_2"] = self.conv2(
-                    P["xyz"], features, P["batch"]
-                )
+            # if self.args.search:
+            P["embedding_2"] = self.conv2(
+                P["xyz"], features, P["batch"]
+            )
 
         # Second baseline
         elif self.args.embedding_layer == "PointNet++":
             P["embedding_1"] = self.conv(P["xyz"], features, P["batch"])
-            if self.args.search:
-                P["embedding_2"] = self.conv2(P["xyz"], features, P["batch"])
+            # if self.args.search:
+            P["embedding_2"] = self.conv2(P["xyz"], features, P["batch"])
 
         torch.cuda.synchronize(device=features.device)
         end = time.time()
@@ -471,13 +485,15 @@ class dMaSIF(nn.Module):
         R_values["input"] = soft_dimension(P1P2["input_features"])
         R_values["conv"] = soft_dimension(P1P2["embedding_1"])
 
-        if self.args.site:
-            P1P2["iface_preds"] = self.net_out(P1P2["embedding_1"])
-
+        # if self.args.site:
         if P2 is not None:
             P1, P2 = split_pair(P1P2)
         else:
             P1 = P1P2
+
+        # iface_preds = self.net_out(torch.cat([P1["embedding_1"], P2["embedding_2"]], axis=0))
+        P1["iface_preds"] = torch.sigmoid(self.net_out1(P1["embedding_1"]))
+        P2["iface_preds"] = torch.sigmoid(self.net_out2(P2["embedding_2"]))
 
         return {
             "P1": P1,

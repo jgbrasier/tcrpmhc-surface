@@ -12,9 +12,8 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "args": [
-                "--experiment_name", "dMaSIF_search_3layer_12A",
+                "--experiment_name", "dMaSIF_3layer_12A_run330_nonegs_randomrot_seed0_bebfce0a_epoch_3",
                 "--embedding_layer", "dMaSIF",
-                "--search", "True",
                 "--random_rotation", "True",
                 "--device", "cuda:0",
                 "--radius", "12.0",

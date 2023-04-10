@@ -12,4 +12,5 @@
 
 . startup.sh
 
-python -W ignore -u scripts/test_dmasif_tcr3d.py --experiment_name dMaSIF_search_3layer_12A_b2280229_epoch_19 --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3
+python -W ignore -u scripts/test_dmasif_tcr3d.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_randomrot_seed0_bebfce0a_epoch_1 --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3
+

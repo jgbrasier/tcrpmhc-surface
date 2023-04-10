@@ -11,6 +11,7 @@ import math
 from tqdm import tqdm
 from tcrpmhc_surface.dmasif.data.geometry import save_vtk
 from tcrpmhc_surface.dmasif.utils import numpy, diagonal_ranges
+from tcrpmhc_surface.dmasif.model.model import combine_pair
 import time
 
 
@@ -99,7 +100,7 @@ def save_protein_batch_single(protein_pair_id, P, save_path, pdb_idx):
     embedding = P["embedding_1"] if pdb_idx == 1 else P["embedding_2"]
     emb_id = 1 if pdb_idx == 1 else 2
 
-    predictions = torch.sigmoid(P["iface_preds"]) if "iface_preds" in P.keys() else 0.0*embedding[:,0].view(-1, 1)
+    predictions = P["iface_preds"] if "iface_preds" in P.keys() else 0.0*embedding[:,0].view(-1, 1)
 
     labels = P["labels"].view(-1, 1) if P["labels"] is not None else 0.0 * predictions
 
@@ -181,6 +182,54 @@ def generate_matchinglabels_old(args, P1, P2):
     P1["labels"] = p1_iface_labels
     P2["labels"] = p2_iface_labels
 
+def compute_multihead_loss(l1, l2, P1, P2):
+    # P1["labels"] = torch.squeeze(P1["labels"]) if P1["labels"].dim() == 2 else P1["labels"]
+    # P1["iface_preds"] = torch.squeeze(P1["iface_preds"]) if P1["iface_preds"].dim() == 2 else P1["iface_preds"]
+    # P2["labels"] = torch.squeeze(P2["labels"]) if P2["labels"].dim() == 2 else P2["labels"]
+    # P2["iface_preds"] = torch.squeeze(P2["iface_preds"]) if P2["iface_preds"].dim() == 2 else P2["iface_preds"]
+    # if args.random_rotation:
+    #     P["xyz"] = torch.matmul(P["rand_rot"].T, P["xyz"].T).T + P["atom_center"]
+    pos_preds1 = P1["iface_preds"][P1["labels"] == 1]
+    pos_labels1 = P1["labels"][P1["labels"] == 1]
+    neg_preds1 = P1["iface_preds"][P1["labels"] == 0]
+    neg_labels1 = P1["labels"][P1["labels"] == 0]
+
+    pos_preds2 = P2["iface_preds"][P2["labels"] == 1]
+    pos_labels2 = P2["labels"][P2["labels"] == 1]
+    neg_preds2 = P2["iface_preds"][P2["labels"] == 0]
+    neg_labels2 = P2["labels"][P2["labels"] == 0]
+
+    n_points_sample1 = len(pos_labels1)
+    pos_indices1 = torch.randperm(len(pos_labels1))[:n_points_sample1]
+    neg_indices1 = torch.randperm(len(neg_labels1))[:n_points_sample1]
+    n_points_sample2 = len(pos_labels2)
+    pos_indices2 = torch.randperm(len(pos_labels2))[:n_points_sample2]
+    neg_indices2 = torch.randperm(len(neg_labels2))[:n_points_sample2]
+
+    pos_preds1 = pos_preds1[pos_indices1]
+    pos_labels1 = pos_labels1[pos_indices1]
+    neg_preds1 = neg_preds1[neg_indices1]
+    neg_labels1 = neg_labels1[neg_indices1]
+
+    pos_preds2 = pos_preds2[pos_indices2]
+    pos_labels2 = pos_labels2[pos_indices2]
+    neg_preds2 = neg_preds2[neg_indices2]
+    neg_labels2 = neg_labels2[neg_indices2]
+
+    preds1 = torch.cat([pos_preds1, neg_preds1])
+    labels1 = torch.cat([pos_labels1, neg_labels1])
+    loss1 = l1(preds1, labels1)
+
+    preds2 = torch.cat([pos_preds2, neg_preds2])
+    labels2 = torch.cat([pos_labels2, neg_labels2])
+    loss2 = l2(preds2, labels2)
+
+    loss = loss1+loss2
+    preds = torch.cat([preds1, preds2], axis=0)
+    labels = torch.cat([labels1, labels2], axis=0)
+
+    return loss, preds, labels
+
 
 def compute_loss(args, P1, P2, n_points_sample=16):
     P1["labels"] = torch.squeeze(P1["labels"]) if P1["labels"].dim() == 2 else P1["labels"]
@@ -231,10 +280,10 @@ def compute_loss(args, P1, P2, n_points_sample=16):
         neg_labels = torch.zeros_like(neg_preds)
 
     else:
-        pos_preds = P1["iface_preds"][P1["labels"] == 1]
-        pos_labels = P1["labels"][P1["labels"] == 1]
-        neg_preds = P1["iface_preds"][P1["labels"] == 0]
-        neg_labels = P1["labels"][P1["labels"] == 0]
+      pos_preds = P1["iface_preds"][P1["labels"] == 1]
+      pos_labels = P1["labels"][P1["labels"] == 1]
+      neg_preds = P1["iface_preds"][P1["labels"] == 0]
+      neg_labels = P1["labels"][P1["labels"] == 0]
 
     n_points_sample = len(pos_labels)
     pos_indices = torch.randperm(len(pos_labels))[:n_points_sample]
@@ -245,12 +294,12 @@ def compute_loss(args, P1, P2, n_points_sample=16):
     neg_preds = neg_preds[neg_indices]
     neg_labels = neg_labels[neg_indices]
 
-    preds_concat = torch.cat([pos_preds, neg_preds])
-    labels_concat = torch.cat([pos_labels, neg_labels])
+    preds = torch.cat([pos_preds, neg_preds])
+    labels = torch.cat([pos_labels, neg_labels])
 
-    loss = F.binary_cross_entropy_with_logits(preds_concat, labels_concat)
+    loss = F.binary_cross_entropy_with_logits(preds, labels)
 
-    return loss, preds_concat, labels_concat
+    return loss, preds, labels
 
 
 def extract_single(P_batch, number):
@@ -293,6 +342,8 @@ def iterate(
     pdb_ids=None,
     summary_writer=None,
     epoch_number=None,
+    loss_fn1=None,
+    loss_fn2=None,
 ):
     """Goes through one epoch of the dataset, returns information for Tensorboard."""
 
@@ -376,11 +427,18 @@ def iterate(
                 P1, P2 = generate_matchinglabels(args, P1, P2)
 
             if P1["labels"] is not None:
-                loss, sampled_preds, sampled_labels = compute_loss(args, P1, P2)
+                loss, sampled_preds, sampled_labels = compute_multihead_loss(loss_fn1, loss_fn2, P1, P2)
+
             else:
                 loss = torch.tensor(0.0)
                 sampled_preds = None
                 sampled_labels = None
+                
+            if args.random_rotation:
+                P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
+                if not args.single_protein:
+                    P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
+
 
             # Compute the gradient, update the model weights:
             if not test:
@@ -481,14 +539,16 @@ def iterate_surface_precompute(dataset, net, args):
                     torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
                 )
                 P2["normals"] = torch.matmul(P2["rand_rot"].T, P2["normals"].T).T
+        if args.search and P1["labels"] is None:
+            P1, P2 = generate_matchinglabels(args, P1, P2)
         protein_pair = protein_pair.to_data_list()[0]
         protein_pair.xyz_p1 = P1["xyz"]
         protein_pair.normals_p1 = P1["normals"]
-        protein_pair.batch_p1 = P1["batch"]
+        protein_pair.xyz_p1_batch = P1["batch"]
         protein_pair.labels_p1 = P1["labels"]
         protein_pair.xyz_p2 = P2["xyz"]
         protein_pair.normals_p2 = P2["normals"]
-        protein_pair.batch_p2 = P2["batch"]
+        protein_pair.xyz_p2_batch = P2["batch"]
         protein_pair.labels_p2 = P2["labels"]
         processed_dataset.append(protein_pair.to("cpu"))
     return processed_dataset

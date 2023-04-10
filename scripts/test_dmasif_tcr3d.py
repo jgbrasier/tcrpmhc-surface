@@ -24,8 +24,11 @@ import pykeops
 pykeops.clean_pykeops()
 
 # PDB_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/pdb/run330_results_for_jg"
-PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/tcr_3d"
-TSV_PATH = "data/preprocessed/run330_results.tsv"
+# PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/tcr_3d_mesh"
+# TSV_PATH = "data/preprocessed/run330_results.tsv"
+
+PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/run_330_mesh"
+TSV_PATH = "data/preprocessed/run330_sampled.tsv"
 
 args = parser.parse_args()
 model_path = "models/" + args.experiment_name
@@ -51,8 +54,12 @@ transformations = (
 # PyTorch geometric expects an explicit list of "batched variables":
 batch_vars = ["xyz_p1", "xyz_p2", "atom_coords_p1", "atom_coords_p2"]
 
-test_pdb_ids = [f.split("_")[0] for f in os.listdir(PROCESSED_DIR)]
-test_df = pd.DataFrame({'uuid': test_pdb_ids})
+# test_pdb_ids = [f.split("_")[0] for f in os.listdir(PROCESSED_DIR)]
+# test_df = pd.DataFrame({'uuid': test_pdb_ids}).drop_duplicates()
+
+df = pd.read_csv(TSV_PATH, sep='\t')
+test_df = df[df['binder']==1].copy()
+test_pdb_ids = df['uuid'].to_list()
 
 # Load the test dataset:
 test_dataset = TCRpMHCDataset(
@@ -68,6 +75,8 @@ test_loader = DataLoader(
 # no shuffling to keep naming consistent with id list
 test_loader = DataLoader(test_dataset, batch_size=1, follow_batch=batch_vars)
 
+l1 = torch.nn.BCELoss()
+l2 = torch.nn.BCELoss()
 
 net = dMaSIF(args)
 # net.load_state_dict(torch.load(model_path, map_location=args.device))
@@ -85,6 +94,8 @@ info = iterate(
     test=True,
     save_path=save_predictions_path,
     pdb_ids=test_pdb_ids,
+    loss_fn1=l1,
+    loss_fn2=l2
 )
 if not os.path.exists('timings'):
     os.makedirs('timings')

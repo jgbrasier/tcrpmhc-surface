@@ -46,6 +46,8 @@ torch.manual_seed(args.seed)
 torch.cuda.manual_seed_all(args.seed)
 np.random.seed(args.seed)
 
+print("dMaSIF search:", args.search)
+
 # Create the model, with a warm restart if applicable:
 net = dMaSIF(args)
 net = net.to(args.device)
@@ -66,8 +68,8 @@ df = pd.read_csv(TSV_PATH, sep='\t')
 # )
 
 # select positive samples and sample 1000 negatives
-# df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
-df = df[df['binder']==1].copy()
+df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
+# df = df[df['binder']==1].copy()
 
 target_sequences = ['CINGVCWTV', 'DATYQRTRALVR', 'ELAGIGILTV', 'FLCMKALLL', 'FTSDYYQLY', 'GLCTLVAML', 'IMNDMPIYM', 'IVTDFSVIK']
 train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, target_values=target_sequences)
@@ -77,14 +79,9 @@ train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.8
 batch_vars = ["xyz_p1", "xyz_p2", "atom_coords_p1", "atom_coords_p2"]
 # Load the train dataset:
 train_dataset = TCRpMHCDataset(
-    df=train_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
+    df=train_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations #, include_mesh_data=False
 )
 
-# train_dataset = [data for data in train_dataset if iface_valid_filter(data)]
-
-train_loader = DataLoader(
-    train_dataset, batch_size=1, follow_batch=batch_vars, shuffle=True
-)
 # print("Preprocessing training dataset")
 # train_dataset = iterate_surface_precompute(train_loader, net, args)
 
@@ -95,12 +92,10 @@ train_nsamples = train_nsamples - val_nsamples
 train_dataset, val_dataset = random_split(
     train_dataset, [train_nsamples, val_nsamples]
 )
-
 # Load the test dataset:
 test_dataset = TCRpMHCDataset(
-    df=test_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
+    df=test_df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations #, include_mesh_data=False
 )
-
 
 # PyTorch_geometric data loaders:
 train_loader = DataLoader(
@@ -109,11 +104,18 @@ train_loader = DataLoader(
 val_loader = DataLoader(val_dataset, batch_size=1, follow_batch=batch_vars)
 test_loader = DataLoader(test_dataset, batch_size=1, follow_batch=batch_vars)
 
+# train_dataset = iterate_surface_precompute(train_dataset, net, args)
+# val_dataset = iterate_surface_precompute(val_dataset, net, args)
+# test_dataset = iterate_surface_precompute(test_dataset, net, args)
+
 
 # Baseline optimizer:
 optimizer = torch.optim.Adam(net.parameters(), lr=3e-4, amsgrad=True)
 best_loss = 1e10  # We save the "best model so far"
 starting_epoch = 0
+
+l1 = torch.nn.BCELoss()
+l2 = torch.nn.BCELoss()
 
 if args.restart_training != "":
     checkpoint = torch.load("models/" + args.restart_training)
@@ -148,6 +150,8 @@ for i in range(starting_epoch, args.n_epochs):
             test=test,
             summary_writer=writer,
             epoch_number=i,
+            loss_fn1=l1, 
+            loss_fn2=l2,
         )
 
         # Write down the results using a TensorBoard writer:
