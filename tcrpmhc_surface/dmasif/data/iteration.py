@@ -151,9 +151,6 @@ def process(args, protein_pair, net):
 
 
 def generate_matchinglabels(args, P1, P2):
-    if args.random_rotation:
-        P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
-        P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
     dist_matrix = torch.sqrt(((P1["xyz"][:, None] - P2["xyz"]) ** 2).sum(axis=2))
     # pairs of atoms whose distance is below the threshold
     pairs = torch.argwhere(dist_matrix < 3.) #threshold set to 3 angstroms
@@ -422,6 +419,20 @@ def iterate(
 
             P1 = outputs["P1"]
             P2 = outputs["P2"]
+
+            if args.random_rotation:
+                P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
+                P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
+
+# descs1 = P1["embedding_1"]
+# descs2 = P2["embedding_2"]
+
+# desc_dists = torch.matmul(descs1, descs2.T)
+
+# np.save(f"{P2['name']}_xyz", P2['xyz'].cpu().detach().numpy())
+# np.save(f"{P2['name']}_labels", P2['labels'].cpu().detach().numpy())
+# np.save(f"{P1['name']}_xyz", P1['xyz'].cpu().detach().numpy())
+# np.save(f"{P1['name']}_labels", P1['labels'].cpu().detach().numpy())
 
             if args.search and P1["labels"] is None:
                 P1, P2 = generate_matchinglabels(args, P1, P2)

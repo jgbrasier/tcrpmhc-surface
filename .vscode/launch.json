@@ -12,7 +12,7 @@
             "console": "integratedTerminal",
             "justMyCode": false,
             "args": [
-                "--experiment_name", "dMaSIF_3layer_12A_run330_nonegs_randomrot_seed0_bebfce0a_epoch_3",
+                "--experiment_name", "dMaSIF_3layer_12A_run330_withnegs_seed0_f92aef8e_epoch_26",
                 "--embedding_layer", "dMaSIF",
                 "--random_rotation", "True",
                 "--device", "cuda:0",
