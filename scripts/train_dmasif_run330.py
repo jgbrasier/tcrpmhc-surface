@@ -67,9 +67,11 @@ df = pd.read_csv(TSV_PATH, sep='\t')
 #     df=df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
 # )
 
-# select positive samples and sample 1000 negatives
-df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
-# df = df[df['binder']==1].copy()
+# select positive samples and sample 1000 negatives]
+if args.with_negs:
+    df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
+else:
+    df = df[df['binder']==1].copy()
 
 target_sequences = ['CINGVCWTV', 'DATYQRTRALVR', 'ELAGIGILTV', 'FLCMKALLL', 'FTSDYYQLY', 'GLCTLVAML', 'IMNDMPIYM', 'IVTDFSVIK']
 train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, target_values=target_sequences)
@@ -123,6 +125,8 @@ if args.restart_training != "":
     optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
     starting_epoch = checkpoint["epoch"]
     best_loss = checkpoint["best_loss"]
+
+print("random rotation:", args.random_rotation)
 
 # Training loop (~100 times) over the dataset:
 for i in range(starting_epoch, args.n_epochs):

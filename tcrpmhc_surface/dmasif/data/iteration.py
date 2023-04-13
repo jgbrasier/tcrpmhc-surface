@@ -228,59 +228,59 @@ def compute_multihead_loss(l1, l2, P1, P2):
     return loss, preds, labels
 
 
-def compute_loss(args, P1, P2, n_points_sample=16):
+def compute_search_loss(args, P1, P2, n_points_sample=16):
     P1["labels"] = torch.squeeze(P1["labels"]) if P1["labels"].dim() == 2 else P1["labels"]
     P2["labels"] = torch.squeeze(P2["labels"]) if P2["labels"].dim() == 2 else P2["labels"]
-    if args.random_rotation:
-        P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
-        P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
+    # if args.random_rotation:
+    #     P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
+    #     P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
 
-    if args.search:
-        pos_xyz1 = P1["xyz"][P1["labels"] == 1]
-        pos_xyz2 = P2["xyz"][P2["labels"] == 1]
-        pos_descs1 = P1["embedding_1"][P1["labels"] == 1]
-        pos_descs2 = P2["embedding_2"][P2["labels"] == 1]
+    # if args.search:
+    pos_xyz1 = P1["xyz"][P1["labels"] == 1]
+    pos_xyz2 = P2["xyz"][P2["labels"] == 1]
+    pos_descs1 = P1["embedding_1"][P1["labels"] == 1]
+    pos_descs2 = P2["embedding_2"][P2["labels"] == 1]
 
-        pos_xyz_dists = (
-            ((pos_xyz1[:, None, :] - pos_xyz2[None, :, :]) ** 2).sum(-1).sqrt()
-        )
-        pos_desc_dists = torch.matmul(pos_descs1, pos_descs2.T)
+    pos_xyz_dists = (
+        ((pos_xyz1[:, None, :] - pos_xyz2[None, :, :]) ** 2).sum(-1).sqrt()
+    )
+    pos_desc_dists = torch.matmul(pos_descs1, pos_descs2.T)
 
-        # np.save(f"{P2['name']}_xyz", P2['xyz'].cpu().detach().numpy())
-        # np.save(f"{P2['name']}_labels", P2['labels'].cpu().detach().numpy())
-        # np.save(f"{P1['name']}_xyz", P1['xyz'].cpu().detach().numpy())
-        # np.save(f"{P1['name']}_labels", P1['labels'].cpu().detach().numpy())
+    # np.save(f"{P2['name']}_xyz", P2['xyz'].cpu().detach().numpy())
+    # np.save(f"{P2['name']}_labels", P2['labels'].cpu().detach().numpy())
+    # np.save(f"{P1['name']}_xyz", P1['xyz'].cpu().detach().numpy())
+    # np.save(f"{P1['name']}_labels", P1['labels'].cpu().detach().numpy())
 
-        pos_preds = pos_desc_dists[pos_xyz_dists < 3.0] # distance threshold set to 3 on labels TODO: pass as param
-        pos_labels = torch.ones_like(pos_preds)
+    pos_preds = pos_desc_dists[pos_xyz_dists < 3.0] # distance threshold set to 3 on labels TODO: pass as param
+    pos_labels = torch.ones_like(pos_preds)
 
-        n_desc_sample = 100
-        sample_desc2 = torch.randperm(len(P2["embedding_2"]))[:n_desc_sample]
-        sample_desc2 = P2["embedding_2"][sample_desc2]
-        neg_preds = torch.matmul(pos_descs1, sample_desc2.T).view(-1)
-        neg_labels = torch.zeros_like(neg_preds)
+    n_desc_sample = 100
+    sample_desc2 = torch.randperm(len(P2["embedding_2"]))[:n_desc_sample]
+    sample_desc2 = P2["embedding_2"][sample_desc2]
+    neg_preds = torch.matmul(pos_descs1, sample_desc2.T).view(-1)
+    neg_labels = torch.zeros_like(neg_preds)
 
-        # For symmetry
-        pos_descs1_2 = P1["embedding_2"][P1["labels"] == 1]
-        pos_descs2_2 = P2["embedding_1"][P2["labels"] == 1]
+    # For symmetry
+    pos_descs1_2 = P1["embedding_2"][P1["labels"] == 1]
+    pos_descs2_2 = P2["embedding_1"][P2["labels"] == 1]
 
-        pos_desc_dists2 = torch.matmul(pos_descs2_2, pos_descs1_2.T)
-        pos_preds2 = pos_desc_dists2[pos_xyz_dists.T < 1.0]
-        pos_preds = torch.cat([pos_preds, pos_preds2], dim=0)
-        pos_labels = torch.ones_like(pos_preds)
+    pos_desc_dists2 = torch.matmul(pos_descs2_2, pos_descs1_2.T)
+    pos_preds2 = pos_desc_dists2[pos_xyz_dists.T < 1.0]
+    pos_preds = torch.cat([pos_preds, pos_preds2], dim=0)
+    pos_labels = torch.ones_like(pos_preds)
 
-        sample_desc1_2 = torch.randperm(len(P1["embedding_2"]))[:n_desc_sample]
-        sample_desc1_2 = P1["embedding_2"][sample_desc1_2]
-        neg_preds_2 = torch.matmul(pos_descs2_2, sample_desc1_2.T).view(-1)
+    sample_desc1_2 = torch.randperm(len(P1["embedding_2"]))[:n_desc_sample]
+    sample_desc1_2 = P1["embedding_2"][sample_desc1_2]
+    neg_preds_2 = torch.matmul(pos_descs2_2, sample_desc1_2.T).view(-1)
 
-        neg_preds = torch.cat([neg_preds, neg_preds_2], dim=0)
-        neg_labels = torch.zeros_like(neg_preds)
+    neg_preds = torch.cat([neg_preds, neg_preds_2], dim=0)
+    neg_labels = torch.zeros_like(neg_preds)
 
-    else:
-      pos_preds = P1["iface_preds"][P1["labels"] == 1]
-      pos_labels = P1["labels"][P1["labels"] == 1]
-      neg_preds = P1["iface_preds"][P1["labels"] == 0]
-      neg_labels = P1["labels"][P1["labels"] == 0]
+    # else:
+    #   pos_preds = P1["iface_preds"][P1["labels"] == 1]
+    #   pos_labels = P1["labels"][P1["labels"] == 1]
+    #   neg_preds = P1["iface_preds"][P1["labels"] == 0]
+    #   neg_labels = P1["labels"][P1["labels"] == 0]
 
     n_points_sample = len(pos_labels)
     pos_indices = torch.randperm(len(pos_labels))[:n_points_sample]
@@ -422,7 +422,8 @@ def iterate(
 
             if args.random_rotation:
                 P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
-                P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
+                if not args.single_protein:
+                    P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
 
 # descs1 = P1["embedding_1"]
 # descs2 = P2["embedding_2"]
@@ -439,16 +440,13 @@ def iterate(
 
             if P1["labels"] is not None:
                 loss, sampled_preds, sampled_labels = compute_multihead_loss(loss_fn1, loss_fn2, P1, P2)
+                search_loss, search_preds, search_labels = compute_search_loss(args, P1, P2, n_points_sample=16)
+
 
             else:
                 loss = torch.tensor(0.0)
                 sampled_preds = None
                 sampled_labels = None
-                
-            if args.random_rotation:
-                P1["xyz"] = torch.matmul(P1["rand_rot"].T, P1["xyz"].T).T + P1["atom_center"]
-                if not args.single_protein:
-                    P2["xyz"] = torch.matmul(P2["rand_rot"].T, P2["xyz"].T).T + P2["atom_center"]
 
 
             # Compute the gradient, update the model weights:
@@ -491,6 +489,10 @@ def iterate(
 
             try:
                 if sampled_labels is not None:
+                    search_roc_auc = roc_auc_score(
+                        np.rint(numpy(search_labels.view(-1))),
+                        numpy(search_preds.view(-1)),
+                    )
                     roc_auc = roc_auc_score(
                         np.rint(numpy(sampled_labels.view(-1))),
                         numpy(sampled_preds.view(-1)),
@@ -509,6 +511,7 @@ def iterate(
                     {
                         "Loss": loss.item(),
                         "ROC-AUC": roc_auc,
+                        "Matching ROC-AUC": search_roc_auc,
                         "conv_time": outputs["conv_time"],
                         "memory_usage": outputs["memory_usage"],
                     },

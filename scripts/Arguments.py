@@ -176,3 +176,10 @@ parser.add_argument(
     default="",
     help="SBATCH run ID",
 )
+
+parser.add_argument(
+    "--with_negs",
+    type=bool,
+    default=True,
+    help="Adds 1000 randomly sampled dummy negative binding complexes",
+)
