@@ -30,7 +30,7 @@ def iface_valid_filter(protein_pair):
 
     return valid1 and valid2
 
-def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_features=False, normals=False):
+def load_protein_npy(pdb_id, data_dir, mesh=False, iface_label=False, chemical_features=False, normals=False):
     """Loads a protein point cloud and its features"""
     if not isinstance(data_dir, Path):
         data_dir = Path(data_dir)
@@ -44,7 +44,7 @@ def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_fe
 
     # Atom labels
     iface_labels = (
-        None if single_pdb
+        None if iface_label
         else tensor(np.load(data_dir / (pdb_id + "_iface_labels.npy")).reshape((-1, 1)))
     )
 
@@ -63,7 +63,7 @@ def load_protein_npy(pdb_id, data_dir, mesh=False, single_pdb=False, chemical_fe
         chemical_features=chemical_features,
         y=iface_labels,
         normals=normals,
-        num_nodes= None if single_pdb else atom_coords.shape[0],
+        num_nodes= atom_coords.shape[0],
         atom_coords=atom_coords,
         atom_types=atom_types,
     )

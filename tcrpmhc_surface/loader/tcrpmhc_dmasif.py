@@ -71,8 +71,8 @@ class TCRpMHCDataset(Dataset):
         p1_id = str(self.df.iloc[index]['uuid'])+"_tcr"
         p2_id = str(self.df.iloc[index]['uuid'])+"_pmhc"
         if self.mesh_data:
-            p1 = load_protein_npy(p1_id, self.processed_dir, mesh=True, single_pdb=False, chemical_features=False, normals=True)
-            p2 = load_protein_npy(p2_id, self.processed_dir, mesh=True, single_pdb=False, chemical_features=False, normals=True)
+            p1 = load_protein_npy(p1_id, self.processed_dir, mesh=True, iface_label=False, chemical_features=False, normals=True)
+            p2 = load_protein_npy(p2_id, self.processed_dir, mesh=True, iface_label=False, chemical_features=False, normals=True)
             protein_pair_data = PairData(
                 name_p1=p1_id,
                 name_p2=p2_id,

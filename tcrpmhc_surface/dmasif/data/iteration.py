@@ -383,6 +383,7 @@ def iterate(
 
             P1 = extract_single(P1_batch, protein_it)
             P2 = None if args.single_protein else extract_single(P2_batch, protein_it)
+            # assert P1['name'].split("_")[0] == P2['name'].split("_")[0]
 
             if args.random_rotation:
                 P1["rand_rot"] = protein_pair.rand_rot1.view(-1, 3, 3)[0]
@@ -509,6 +510,7 @@ def iterate(
             info.append(
                 dict(
                     {
+                        "Name": P1['name'].split("_")[0],
                         "Loss": loss.item(),
                         "ROC-AUC": roc_auc,
                         "Matching ROC-AUC": search_roc_auc,

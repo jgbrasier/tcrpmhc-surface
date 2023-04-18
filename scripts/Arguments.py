@@ -180,6 +180,14 @@ parser.add_argument(
 parser.add_argument(
     "--with_negs",
     type=bool,
-    default=True,
+    default=False,
     help="Adds 1000 randomly sampled dummy negative binding complexes",
+)
+
+
+parser.add_argument(
+    "--random_split",
+    type=bool,
+    default=False,
+    help="Use Train/Test random split instead of hard-split heuristic",
 )

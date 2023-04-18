@@ -4,6 +4,7 @@ import numpy as np
 from pathlib import Path
 import uuid
 
+from sklearn.model_selection import train_test_split
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
@@ -62,19 +63,25 @@ transformations = (
 )
 
 # Read in and generate data
-df = pd.read_csv(TSV_PATH, sep='\t')
+df = pd.read_csv(TSV_PATH, sep='\t', index_col=0)
 # dataset = TCRpMHCDataset(
 #     df=df, pdb_dir=PDB_DIR, processed_dir=PROCESSED_DIR, transform=transformations
 # )
 
 # select positive samples and sample 1000 negatives]
+print("with negs:", args.with_negs)
 if args.with_negs:
     df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
 else:
     df = df[df['binder']==1].copy()
 
-target_sequences = ['CINGVCWTV', 'DATYQRTRALVR', 'ELAGIGILTV', 'FLCMKALLL', 'FTSDYYQLY', 'GLCTLVAML', 'IMNDMPIYM', 'IVTDFSVIK']
-train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, target_values=target_sequences)
+# train-test split heuristics
+print("random split:", args.random_split)
+if args.random_split:
+    train_df, test_df = train_test_split(df, train_size=0.83, random_state=args.seed)
+else:
+    target_sequences = ['CINGVCWTV', 'DATYQRTRALVR', 'ELAGIGILTV', 'FLCMKALLL', 'FTSDYYQLY', 'GLCTLVAML', 'IMNDMPIYM', 'IVTDFSVIK']
+    train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, target_values=target_sequences)
 
 
 # PyTorch geometric expects an explicit list of "batched variables":
@@ -174,7 +181,7 @@ for i in range(starting_epoch, args.n_epochs):
                 writer.add_scalar(f"{key}/{suffix}", np.mean(val[val > 0]), i)
 
         if dataset_type == "Validation":  # Store validation loss for saving the model
-            val_loss = np.mean(info["Loss"])
+            val_loss = np.mean(info["Matching ROC-AUC"])
 
     if True:  # Additional saves
         if val_loss < best_loss:

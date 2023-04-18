@@ -27,14 +27,13 @@ import pykeops
 pykeops.clean_pykeops()
 
 
-PDB_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/pdb/run330_results_for_jg"
-PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/tcr_3d"
-SAVE_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/tcr_3d_mesh"
-TSV_PATH = "data/preprocessed/run330_results.tsv"
+PDB_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/pdb/atlas_true_pdb"
+PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/atlas_true"
+SAVE_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/atlas_true_mesh"
+TSV_PATH = "data/preprocessed/processed_atlas.tsv"
 
 if not os.path.exists(SAVE_DIR):
     os.makedirs(SAVE_DIR)
-
 
 # Parse the arguments, prepare the TensorBoard writer:
 args = parser.parse_args()

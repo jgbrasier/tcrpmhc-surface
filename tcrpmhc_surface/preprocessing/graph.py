@@ -88,7 +88,7 @@ def extract_atom_data(df: pd.DataFrame, center=False,
     type_idx = np.array(df[type_column].apply(lambda x: ele2num[x]))
     atom_types = np.eye(len(ele2num.keys()))[type_idx]
     # interface labels
-    iface_labels = np.array(df[label_column])
+    iface_labels = np.array(df[label_column]) if label_column else None
     if center:
         atoms_coords = atoms_coords - np.mean(atoms_coords, axis=0, keepdims=True)
     return {"atom_xyz": atoms_coords, "atom_types": atom_types, "atom_labels": iface_labels}
