@@ -44,8 +44,7 @@ def load_protein_npy(pdb_id, data_dir, mesh=False, iface_label=False, chemical_f
 
     # Atom labels
     iface_labels = (
-        None if iface_label
-        else tensor(np.load(data_dir / (pdb_id + "_iface_labels.npy")).reshape((-1, 1)))
+        tensor(np.load(data_dir / (pdb_id + "_iface_labels.npy")).reshape((-1, 1))) if iface_label else None
     )
 
     # Features

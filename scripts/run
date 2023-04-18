@@ -9,7 +9,7 @@ python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_3lay
 
 # generate structures
 python -W ignore -u scripts/process_dmasif_run330.py --experiment_name dMaSIF_3layer_12A --embedding_layer dMaSIF --device cuda:0 --radius 12.0 --n_layers 3
-python -W ignore -u scripts/process_dmasif_tcr3d.py --experiment_name dMaSIF_3layer_12A --embedding_layer dMaSIF --device cuda:0 --radius 12.0 --n_layers 3
+python -W ignore -u scripts/process_dmasif_benchmark.py --experiment_name dMaSIF_3layer_12A --embedding_layer dMaSIF --device cuda:0 --radius 12.0 --n_layers 3
 
 # test
 python -W ignore -u scripts/test_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_seed2_7b99e031_epoch_17 --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3
