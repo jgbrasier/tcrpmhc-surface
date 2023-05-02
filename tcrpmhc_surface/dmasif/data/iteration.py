@@ -478,7 +478,7 @@ def iterate(
                 for d, features in enumerate(P1["input_features"].T):
                     summary_writer.add_histogram(f"Input features/{d}", features)
 
-            if save_path is not None:
+            if save_path is not None and args.save_features:
                 protein_pair_id = batch_ids[protein_it] + "_tcr_pmhc"
                 save_protein_batch_single(
                     protein_pair_id, P1, save_path, pdb_idx=1
@@ -516,6 +516,7 @@ def iterate(
                         "Matching ROC-AUC": search_roc_auc,
                         "conv_time": outputs["conv_time"],
                         "memory_usage": outputs["memory_usage"],
+                        "inference_time": prediction_time,
                     },
                     # Merge the "R_values" dict into "info", with a prefix:
                     **{"R_values/" + k: v for k, v in R_values.items()},

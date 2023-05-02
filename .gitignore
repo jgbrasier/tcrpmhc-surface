@@ -140,5 +140,6 @@ runs
 models/
 out
 preds
-timings
+timings*
 stats
+sbatch*

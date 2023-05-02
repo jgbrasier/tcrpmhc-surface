@@ -11,5 +11,33 @@ python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_3lay
 python -W ignore -u scripts/process_dmasif_run330.py --experiment_name dMaSIF_3layer_12A --embedding_layer dMaSIF --device cuda:0 --radius 12.0 --n_layers 3
 python -W ignore -u scripts/process_dmasif_benchmark.py --experiment_name dMaSIF_3layer_12A --embedding_layer dMaSIF --device cuda:0 --radius 12.0 --n_layers 3
 
-# test
-python -W ignore -u scripts/test_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_seed2_7b99e031_epoch_17 --batch_size 64 --embedding_layer dMaSIF --search True --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3
+# list of test models
+#dMaSIF
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name dMaSIF_1layer_12A_run330_nonegs_seed33_7457652d_epoch_11 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 1
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name dMaSIF_2layer_12A_run330_nonegs_seed33_32de0ea9_epoch_11 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 2
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_seed2_7b99e031_epoch_17 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+#DGCNN
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name DGCNN_1layer_12A_run330_nonegs_seed33_91b084a2_epoch_1 --embedding_layer DGCNN --device cuda:0 --random_rotation True --radius 12.0 --n_layers 1
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name DGCNN_2layer_12A_run330_nonegs_seed33_0723fc65_epoch_2 --embedding_layer DGCNN --device cuda:0 --random_rotation True --radius 12.0 --n_layers 2
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name DGCNN_3layer_12A_run330_nonegs_seed2_fa534300_epoch_10 --embedding_layer DGCNN --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+#PointNet
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name PointNet++_1layer_12A_run330_nonegs_seed33_3b527297_epoch_7 --embedding_layer PointNet++ --device cuda:0 --random_rotation True --radius 12.0 --n_layers 1
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name PointNet++_2layer_12A_run330_nonegs_seed33_171d480b_epoch_6 --embedding_layer PointNet++ --device cuda:0 --random_rotation True --radius 12.0 --n_layers 2 # Replace
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name PointNet++_3layer_12A_run330_nonegs_seed2_27a48f6b_epoch_5 --embedding_layer PointNet++ --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+
+# if save
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_seed2_7b99e031_epoch_17 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name DGCNN_3layer_12A_run330_nonegs_seed2_fa534300_epoch_10 --embedding_layer DGCNN --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name PointNet++_3layer_12A_run330_nonegs_seed2_27a48f6b_epoch_5 --embedding_layer PointNet++ --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+
+
+# test with negs
+python -W ignore -u scripts/test_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_run330_withnegs_seed2_c650037c_epoch_9 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3
+
+# test benchmark
+python -W ignore -u scripts/test_dmasif_benchmark.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_seed2_7b99e031_epoch_17 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3
+python -W ignore -u scripts/test_dmasif_benchmark.py --experiment_name dMaSIF_3layer_12A_run330_withnegs_seed2_c650037c_epoch_9 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3
+
+python -W ignore -u scripts/test_dmasif_benchmark.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_seed2_7b99e031_epoch_17 --embedding_layer dMaSIF --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+python -W ignore -u scripts/test_dmasif_benchmark.py --experiment_name DGCNN_3layer_12A_run330_nonegs_seed2_fa534300_epoch_10 --embedding_layer DGCNN --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True
+python -W ignore -u scripts/test_dmasif_benchmark.py --experiment_name PointNet++_3layer_12A_run330_nonegs_seed2_27a48f6b_epoch_5 --embedding_layer PointNet++ --device cuda:0 --random_rotation True --radius 12.0 --n_layers 3 --save_features True

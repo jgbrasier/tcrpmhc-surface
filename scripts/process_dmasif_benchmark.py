@@ -131,5 +131,5 @@ for it, protein_pair in enumerate(tqdm(dataloader)):
         np.save(os.path.join(SAVE_DIR, p1_name+'_atomtypes'), P1['atomtypes'].cpu().detach().numpy())
         np.save(os.path.join(SAVE_DIR, p2_name+'_atomtypes'), P2['atomtypes'].cpu().detach().numpy())
 
-np.save(os.path.join(stats_path, 'tcr_3d_surface_times'), surface_times)
-np.save(os.path.join(stats_path, 'tcr_3d_label_times'), label_times)
+np.save(os.path.join(stats_path, 'benchmark_surface_times'), surface_times)
+np.save(os.path.join(stats_path, 'benchmark_label_times'), label_times)

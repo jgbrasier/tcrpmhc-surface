@@ -28,12 +28,12 @@ pykeops.clean_pykeops()
 # PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/tcr_3d_mesh"
 # TSV_PATH = "data/preprocessed/run330_results.tsv"
 
-PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/run_330_mesh"
-TSV_PATH = "data/preprocessed/run330_sampled.tsv"
+PROCESSED_DIR = "/n/data1/hms/dbmi/zitnik/lab/users/jb611/surface/atlas_true_mesh"
+TSV_PATH = "data/preprocessed/processed_atlas.tsv"
 
 args = parser.parse_args()
 model_path = "models/" + args.experiment_name
-save_predictions_path = Path("preds/run330/" + args.experiment_name)
+save_predictions_path = Path("preds/benchmark/" + args.experiment_name)
 
 # Ensure reproducability:
 torch.backends.cudnn.deterministic = True
@@ -58,15 +58,7 @@ batch_vars = ["xyz_p1", "xyz_p2", "atom_coords_p1", "atom_coords_p2"]
 # test_pdb_ids = [f.split("_")[0] for f in os.listdir(PROCESSED_DIR)]
 # test_df = pd.DataFrame({'uuid': test_pdb_ids}).drop_duplicates()
 
-df = pd.read_csv(TSV_PATH, sep='\t')
-if args.with_negs:
-    df = pd.concat((df[df['binder']==1], df[df['binder']==0].sample(1000, random_state=args.seed))).copy()
-else:
-    df = df[df['binder']==1].copy()
-
-target_sequences = ['CINGVCWTV', 'DATYQRTRALVR', 'ELAGIGILTV', 'FLCMKALLL', 'FTSDYYQLY', 'GLCTLVAML', 'IMNDMPIYM', 'IVTDFSVIK']
-train_df, test_df, selected_targets = hard_split_df(df, 'peptide', min_ratio=0.85, random_seed=args.seed, target_values=target_sequences)
-
+test_df = pd.read_csv(TSV_PATH, sep='\t')
 test_pdb_ids = test_df['uuid'].to_list()
 # Load the test dataset:
 test_dataset = TCRpMHCDataset(
@@ -104,9 +96,9 @@ info = iterate(
 )
 
 # save info dict as JSON
-if not os.path.exists('timings_2'):
-    os.makedirs('timings_2')
-with open(f"timings_2/{args.experiment_name}_run330_out.json", "w") as outfile:
+if not os.path.exists('timings'):
+    os.makedirs('timings')
+with open(f"timings/{args.experiment_name}_benchmark_out.json", "w") as outfile:
     json.dump(info, outfile)
 
 # np.save(f"timings/{args.experiment_name}_convtime.npy", info["conv_time"])

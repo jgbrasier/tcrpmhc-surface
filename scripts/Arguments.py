@@ -191,3 +191,10 @@ parser.add_argument(
     default=False,
     help="Use Train/Test random split instead of hard-split heuristic",
 )
+
+parser.add_argument(
+    "--save_features",
+    type=bool,
+    default=False,
+    help="Saves the features npy and vtk files during inference",
+)

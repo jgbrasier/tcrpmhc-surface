@@ -12,5 +12,5 @@
 
 . startup.sh
 
-python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_random_split_seed2 --batch_size 64 --embedding_layer dMaSIF --random_rotation True --device cuda:0 --radius 12.0 --n_layers 3 --n_epoch 20 --seed 2 --random_split True
+python -W ignore -u scripts/train_dmasif_run330.py --experiment_name dMaSIF_3layer_12A_run330_nonegs_seed3 --batch_size 64 --embedding_layer dMaSIF --random_rotation True --device cuda:0 --radius 12.0 --n_layers 3 --n_epoch 15 --seed 3 
 

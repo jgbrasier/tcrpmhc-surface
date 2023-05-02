@@ -90,7 +90,7 @@ class TCRpMHCDataset(Dataset):
         else:
             p1 = load_protein_npy(p1_id, self.processed_dir, mesh=False, iface_label=False, chemical_features=False, normals=False)
             p2 = load_protein_npy(p2_id, self.processed_dir, mesh=False, iface_label=False, chemical_features=False, normals=False)
-            # if all flags set to False: atom_coords, atom_types, iface_labels
+            # if all flags set to False: atom_coords, atom_types
             protein_pair_data = PairData(
                 name_p1=p1_id,
                 name_p2=p2_id,

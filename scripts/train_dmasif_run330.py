@@ -120,7 +120,7 @@ test_loader = DataLoader(test_dataset, batch_size=1, follow_batch=batch_vars)
 
 # Baseline optimizer:
 optimizer = torch.optim.Adam(net.parameters(), lr=3e-4, amsgrad=True)
-best_loss = 1e10  # We save the "best model so far"
+best_loss = 0  # We save the "best model so far"
 starting_epoch = 0
 
 l1 = torch.nn.BCELoss()
@@ -184,7 +184,7 @@ for i in range(starting_epoch, args.n_epochs):
             val_loss = np.mean(info["Matching ROC-AUC"])
 
     if True:  # Additional saves
-        if val_loss < best_loss:
+        if val_loss > best_loss:
             print("Validation loss {}, saving model".format(val_loss))
             torch.save(
                 {
